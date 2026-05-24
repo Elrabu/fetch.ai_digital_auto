@@ -24,7 +24,7 @@ this creates the Velocitas-Runtime (Kuksa Databroker, MQTT, Mock-Service) that i
 git clone https://github.com/eclipse-velocitas/vehicle-app-python-template.git SmartWiperApp
 cd SmartWiperApp
 ```
-/SmartWiperAgents
+
 ### 2. pull the packages declared in .velocitas.json
 ```
 velocitas init
@@ -39,4 +39,42 @@ velocitas sync
 ```
 velocitas exec runtime-local up
 ```
+
+## SmartWiperBridge Setup
+
+### 1. Create & Activate Virtual Environment
+```
+python3.12 -m venv .venv
+source .venv/bin/activate   
+```
+
+### 2. Install Dependencies
+```
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 3. Configure Environment Variables
+```
+cp .env.example .env
+```
+
+content:
+```
+ASI_ONE_API_KEY=ASI:One_API_key_here
+ASI_ONE_MODEL=asi1-mini
+```
+
+### 4.  Run the agents
+```
+python velocitas_runner.py
+```
+
+
+
+
+## Setup Agentverse agent 
+
+## Setup Mailbox
+
 
