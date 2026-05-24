@@ -56,9 +56,21 @@ velocitas exec runtime-local up
 4. Name it exactly: `smartwiper-safety`
 5. Click **Create**
 
-### 2. Getthe ASI:One APi key
+### 2. Get the ASI:One API key
+
+1. Go to [asi1.ai](https://asi1.ai)
+2. Click **Sign Up** in the top right corner
+3. Register with your email or Google account
+4. Verify your email and log in
+5. go to your profile, select **Developer**
+6. click **create new key**
+7. copy API key
 
 ### 3. create a new secret for the ASI:One API key
+
+1. Go to **Agent Secrets** in the bottom left corner under the **Build** Tab
+2. click **New Secret** and enter the ASI:one API key with the name ```ASI1_API_KEY```
+3. the secret is automatically used by the agentverse agent
 
 
 ### 4. paste the Safety Agent Code into ```agent.py```
@@ -255,7 +267,7 @@ cp .env.example .env
 
 content:
 ```
-
+AGENTVERSE_API_KEY=YOUR_AGENTVERSE_API_KEY
 ```
 
 ### 4.  Run the agents
@@ -263,10 +275,34 @@ content:
 python velocitas_runner.py
 ```
 
-
-
 ## Setup Mailbox
+When running the local bridge agent for the first time, it will print:
+```
+INFO: Agent inspector available at:
+https://agentverse.ai/inspect/?uri=http://127.0.0.1:8000&address=agent1q...
+```
 
-### Setup the Vehicle Data Broker
+1. open the URL in the browser
+2. if not signed in, sign in to agentverse
+3. click **Connect**
+4. Select **Mailbox** and click confirm
+
+## KUKSA client setup
+to change the standart values of the Velociats Runtime while is is running, install the KUKSA client:
+```
+pip install kuksa-client
+```
+
+start the KUKSA client:
+```
+kuksa-client grpc://127.0.0.1:55555
+```
+
+to change the standart values use this:
+```
+setValue Vehicle.Speed 0
+setValue Vehicle.Body.Windshield.Front.Wiping.Mode "MEDIUM"
+setValue Vehicle.Body.Hood.IsOpen true
+```
 
 
