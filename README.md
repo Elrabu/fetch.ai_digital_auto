@@ -48,8 +48,6 @@ velocitas exec runtime-local up
 2. Click **Sign Up** and create an account
 3. Verify your email and log in
 
----
-
 ### 2. create a New Agent
 
 1. In the left sidebar click **Agents**
@@ -58,7 +56,12 @@ velocitas exec runtime-local up
 4. Name it exactly: `smartwiper-safety`
 5. Click **Create**
 
-### 3. paste the Safety Agent Code into ```agent.py```
+### 2. Getthe ASI:One APi key
+
+### 3. create a new secret for the ASI:One API key
+
+
+### 4. paste the Safety Agent Code into ```agent.py```
 
 ```
 import json
@@ -214,7 +217,7 @@ async def handle_wiper_state(ctx: Context, sender: str, msg: WiperStateMsg):
 ### 4. copy the Agent Address
 At the top of the agent page you will see a string starting with ```agent1q...```
 
-Copy this and paste it into bridge_agent.py:
+Copy this and past it in ```bridge_agent.py```:
 
 ```
 SAFETY_AGENT_ADDRESS = "agent1q..."
@@ -223,7 +226,7 @@ SAFETY_AGENT_ADDRESS = "agent1q..."
 ### 5. start the agent
 Click the **Start** button in the top right of the editor
 
-### 6- get an Agentverse API Key
+### 6. get an Agentverse API Key
 
 1. click your profile icon (e-mail address on bottom left)
 2. select API Keys
@@ -252,8 +255,7 @@ cp .env.example .env
 
 content:
 ```
-ASI_ONE_API_KEY=ASI:One_API_key_here
-ASI_ONE_MODEL=asi1-mini
+
 ```
 
 ### 4.  Run the agents
