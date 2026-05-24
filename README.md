@@ -40,6 +40,197 @@ velocitas sync
 velocitas exec runtime-local up
 ```
 
+## Setup Agentverse agent 
+
+### 1. create an Agentverse Account
+
+1. Go to [agentverse.ai](https://agentverse.ai)
+2. Click **Sign Up** and create an account
+3. Verify your email and log in
+
+---
+
+### 2. create a New Agent
+
+1. In the left sidebar click **Agents**
+2. Click **+ New Agent**
+3. Choose **Blank Agent**
+4. Name it exactly: `smartwiper-safety`
+5. Click **Create**
+
+### 3. paste the Safety Agent Code into ```agent.py```
+
+```
+import json
+import os
+import re
+
+import httpx
+from uagents import Context, Model
+
+
+# ── Message Models (UNCHANGED — must match bridge_agent.py) ──────────────────
+class WiperStateMsg(Model):
+    hood_is_open:       bool
+    current_wiper_mode: str
+    vehicle_speed:      float
+
+class SafetyResponseMsg(Model):
+    risk_level:         str
+    assessment:         str
+    recommended_action: str
+
+
+# ── ASI:One config ───────────────────────────────────────────────────────────
+ASI1_URL   = "https://api.asi1.ai/v1/chat/completions"
+ASI1_MODEL = "asi1-mini"
+ASI1_KEY   = os.environ.get("ASI1_API_KEY", "").strip()
+
+SYSTEM_PROMPT = (
+    "You are a windshield wiper safety reasoner. "
+    "Given hood_is_open (bool), current_wiper_mode (OFF|SLOW|MEDIUM|FAST), "
+    "and vehicle_speed (km/h, float), return STRICT JSON of the form: "
+    '{"risk_level":"LOW|MEDIUM|HIGH",'
+    '"recommended_action":"STOP_WIPER|KEEP_WIPER|REDUCE_WIPER",'
+    '"assessment":"<one short sentence>"} '
+    "and NOTHING else. Heuristics: "
+    "hood open with wipers active => STOP_WIPER/HIGH; "
+    "hood open with wipers OFF => KEEP_WIPER/MEDIUM; "
+    "speed > 130 km/h with FAST wipers => REDUCE_WIPER/MEDIUM; "
+    "otherwise KEEP_WIPER/LOW."
+)
+
+VALID_RISK   = {"LOW", "MEDIUM", "HIGH"}
+VALID_ACTION = {"STOP_WIPER", "KEEP_WIPER", "REDUCE_WIPER"}
+_JSON_RE     = re.compile(r"\{.*\}", re.DOTALL)
+
+
+# ── ASI:One call ─────────────────────────────────────────────────────────────
+async def _llm_reason(msg: WiperStateMsg, ctx: Context) -> dict:
+    if not ASI1_KEY:
+        raise RuntimeError("ASI1_API_KEY secret is not set on Agentverse.")
+
+    user = (
+        f"hood_is_open={msg.hood_is_open}, "
+        f"current_wiper_mode={msg.current_wiper_mode}, "
+        f"vehicle_speed={msg.vehicle_speed}"
+    )
+    payload = {
+        "model": ASI1_MODEL,
+        "temperature": 0,
+        "stream": False,
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user",   "content": user},
+        ],
+    }
+    headers = {
+        "Authorization": f"Bearer {ASI1_KEY}",
+        "Content-Type":  "application/json",
+    }
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.post(ASI1_URL, json=payload, headers=headers)
+        r.raise_for_status()
+        text = r.json()["choices"][0]["message"]["content"]
+
+    ctx.logger.info(f"[asi1] raw reply: {text!r}")
+
+    m = _JSON_RE.search(text)
+    if not m:
+        raise ValueError(f"LLM produced no JSON object: {text!r}")
+    return json.loads(m.group(0))
+
+
+# ── Hard safety policy (overrides LLM) ───────────────────────────────────────
+def _apply_safety_policy(msg: WiperStateMsg, llm: dict) -> SafetyResponseMsg:
+    # Rule 1: hood open + wipers active => unconditional stop
+    if msg.hood_is_open and msg.current_wiper_mode.upper() != "OFF":
+        return SafetyResponseMsg(
+            risk_level="HIGH",
+            assessment=(
+                "Hood is open while wipers are active — mechanical collision "
+                "risk (policy override of LLM)."
+            ),
+            recommended_action="STOP_WIPER",
+        )
+
+    risk   = llm.get("risk_level")
+    action = llm.get("recommended_action")
+    reason = str(llm.get("assessment", ""))[:240]
+
+    if risk not in VALID_RISK or action not in VALID_ACTION:
+        return SafetyResponseMsg(
+            risk_level="HIGH",
+            assessment=f"LLM verdict invalid ({llm!r}); failing safe.",
+            recommended_action="STOP_WIPER",
+        )
+
+    return SafetyResponseMsg(
+        risk_level=risk,
+        assessment=reason,
+        recommended_action=action,
+    )
+
+
+# ── Startup ──────────────────────────────────────────────────────────────────
+@agent.on_event("startup")
+async def on_start(ctx: Context):
+    ctx.logger.info(f"Safety Agent (ASI:One-backed) started: {ctx.address}")
+    if not ASI1_KEY:
+        ctx.logger.warning(
+            "ASI1_API_KEY secret is missing — every request will fail safe."
+        )
+    ctx.logger.info("Ready to receive WiperStateMsg messages.")
+
+
+# ── Message Handler ──────────────────────────────────────────────────────────
+@agent.on_message(model=WiperStateMsg)
+async def handle_wiper_state(ctx: Context, sender: str, msg: WiperStateMsg):
+    ctx.logger.info(
+        f"Received from {sender[:16]}…: hood={msg.hood_is_open}, "
+        f"mode={msg.current_wiper_mode}, speed={msg.vehicle_speed}"
+    )
+
+    try:
+        llm_verdict = await _llm_reason(msg, ctx)
+        ctx.logger.info(f"[asi1] proposed: {llm_verdict}")
+    except Exception as e:
+        ctx.logger.exception(f"LLM call failed; failing safe: {e}")
+        await ctx.send(sender, SafetyResponseMsg(
+            risk_level="HIGH",
+            assessment=f"LLM unavailable ({type(e).__name__}); failing safe.",
+            recommended_action="STOP_WIPER",
+        ))
+        return
+
+    final = _apply_safety_policy(msg, llm_verdict)
+    ctx.logger.info(
+        f"Final verdict → {final.risk_level} / {final.recommended_action}"
+    )
+    await ctx.send(sender, final)
+
+```
+### 4. copy the Agent Address
+At the top of the agent page you will see a string starting with ```agent1q...```
+
+Copy this and paste it into bridge_agent.py:
+
+```
+SAFETY_AGENT_ADDRESS = "agent1q..."
+```
+
+### 5. start the agent
+Click the **Start** button in the top right of the editor
+
+### 6- get an Agentverse API Key
+
+1. click your profile icon (e-mail address on bottom left)
+2. select API Keys
+3. click + New API Key
+4. name it smartwiper-bridge
+5. copy the generated key
+
 ## SmartWiperBridge Setup
 
 ### 1. Create & Activate Virtual Environment
@@ -72,9 +263,8 @@ python velocitas_runner.py
 
 
 
-
-## Setup Agentverse agent 
-
 ## Setup Mailbox
+
+### Setup the Vehicle Data Broker
 
 
