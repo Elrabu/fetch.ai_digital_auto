@@ -23,7 +23,7 @@ verdict_done = threading.Event()
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 AGENTVERSE_API_KEY = os.getenv("AGENTVERSE_API_KEY")
-SAFETY_AGENT_ADDRESS = "agent1q25d7k7xddjh45xk5uqx0l3c9pav3m2l7zwc77fncfy52fsks0ya22z7g3h"
+SAFETY_AGENT_ADDRESS = "YOUR_AGENTVERSE_AGENT_ADDRESS"
 
 # ── Shared state ──────────────────────────────────────────────────────────────
 _event_queue: queue.Queue = queue.Queue()
