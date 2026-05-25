@@ -53,7 +53,7 @@ velocitas exec runtime-local up
 1. In the left sidebar click **Agents**
 2. Click **+ New Agent**
 3. Choose **Blank Agent**
-4. Name it exactly: `smartwiper-safety`
+4. Name it something like `smartwiper-safety-xyz` (There can not be two agent with the same name)
 5. Click **Create**
 
 ### 2. Get the ASI:One API key
@@ -62,9 +62,9 @@ velocitas exec runtime-local up
 2. Click **Sign Up** in the top right corner
 3. Register with your email or Google account
 4. Verify your email and log in
-5. go to your profile, select **Developer**
+5. click on your e-mail in the bottom left corner, select **Developer** Button or go to this link: [https://asi1.ai/developer](https://asi1.ai/developer)
 6. click **create new key**
-7. copy API key
+7. save API key so that you can access it later (e.g. in a txt file)
 
 ### 3. create a new secret for the ASI:One API key
 
@@ -229,7 +229,9 @@ async def handle_wiper_state(ctx: Context, sender: str, msg: WiperStateMsg):
 ### 4. copy the Agent Address
 At the top of the agent page you will see a string starting with ```agent1q...```
 
-Copy this and past it in ```bridge_agent.py```:
+1. save the agent address so that you can access it later (e.g. in a txt file)
+2. open the file from the repository: ```fetch.ai_digital_auto/bridge_agent.py```
+3. paste it in line 26 ```SAFETY_AGENT_ADDRESS = "agent1q...```
 
 ```
 SAFETY_AGENT_ADDRESS = "agent1q..."
@@ -244,7 +246,7 @@ Click the **Start** button in the top right of the editor
 2. select API Keys
 3. click + New API Key
 4. name it smartwiper-bridge
-5. copy the generated key
+5. save API key so that you can access it later (e.g. in a txt file)
 
 ## SmartWiperBridge Setup
 
