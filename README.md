@@ -297,13 +297,21 @@ content:
 AGENTVERSE_API_KEY=YOUR_AGENTVERSE_API_KEY
 ```
 
-### 4. export vehicle module
+### 4. Update local agent seed
+
+in the file ```bridge_agent.py``` in line 66 update the seed so you can create a new agent:
+```
+seed="YOUR_CUSTOM_SEED_PHRASE_HERE",
+```
+
+
+### 5. export vehicle module
 in the virtual environment
 ```
 export PYTHONPATH="/your/path/to/the/project/SmartWiperApp/gen/vehicle_model:$PYTHONPATH"
 ```
 
-### 5.  Run the agents
+### 6.  Run the agents
 ```
 python velocitas_runner.py
 ```
