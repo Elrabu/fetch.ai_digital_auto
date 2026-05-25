@@ -58,6 +58,8 @@ velocitas exec runtime-local up
 
 ### 2. Get the ASI:One API key
 
+you will need this API key for the agent that will be hosted in the agenverse
+
 1. Go to [asi1.ai](https://asi1.ai)
 2. Click **Sign Up** in the top right corner
 3. Register with your email or Google account
@@ -65,6 +67,7 @@ velocitas exec runtime-local up
 5. click on your e-mail in the bottom left corner, select **Developer** Button or go to this link: [https://asi1.ai/developer](https://asi1.ai/developer)
 6. click **create new key**
 7. save API key so that you can access it later (e.g. in a txt file)
+
 
 ### 3. create a new secret for the ASI:One API key
 
@@ -244,6 +247,8 @@ SAFETY_AGENT_ADDRESS = "agent1q..."
 Click the **Start** button in the top right of the editor
 
 ### 6. get an Agentverse API Key
+
+you will need this API key for the local ```bridge:_agent.py``` file in the downloaded code
 
 1. click your profile icon (e-mail address on bottom left)
 2. select API Keys
