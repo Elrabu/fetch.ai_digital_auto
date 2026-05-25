@@ -49,6 +49,10 @@ velocitas exec runtime-local up
 3. Verify your email and log in
 
 ### 2. create a New Agent
+if you already have agents active in the agentverse create agents by clicking on **Launch new Agent** 
+<img width="1345" height="215" alt="image" src="https://github.com/user-attachments/assets/650a7254-4a7a-4778-83fa-57ab59ebfcf0" />
+
+if this is the first agent:
 
 1. In the left sidebar click **Agents**
 2. Click **+ New Agent**
@@ -253,8 +257,15 @@ you will need this API key for the local ```bridge:_agent.py``` file in the down
 1. click your profile icon (e-mail address on bottom left)
 2. select API Keys
 3. click + New API Key
-4. name it smartwiper-bridge
-5. save API key so that you can access it later (e.g. in a txt file)
+4. give these permissions:
+
+<img width="1331" height="873" alt="image" src="https://github.com/user-attachments/assets/038fb105-b0b1-414c-9444-6b871339eb14" />
+
+6. name it smartwiper-bridge
+7. the API key should look like this:
+
+
+8. save API key so that you can access it later (e.g. in a txt file)
 
 ## SmartWiperBridge Setup
 
