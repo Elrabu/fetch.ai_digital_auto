@@ -297,7 +297,13 @@ content:
 AGENTVERSE_API_KEY=YOUR_AGENTVERSE_API_KEY
 ```
 
-### 4.  Run the agents
+### 4. export vehicle module
+in the virtual environment
+```
+export PYTHONPATH="/your/path/to/the/project/SmartWiperApp/gen/vehicle_model:$PYTHONPATH"
+```
+
+### 5.  Run the agents
 ```
 python velocitas_runner.py
 ```
