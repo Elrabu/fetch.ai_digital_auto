@@ -4,7 +4,7 @@
 
 ## Hierarchy
 ```
- ├── SmartWiperBridge <- local Langgraph agents
+ ├── fetch.ai_digital_auto <- local Langgraph agents
  ├── SmartWiperApp <- Velocitas Runtime 
 ```
 ## Requirements
@@ -267,7 +267,13 @@ you will need this API key for the local ```bridge:_agent.py``` file in the down
 
 8. save API key so that you can access it later (e.g. in a txt file)
 
-## SmartWiperBridge Setup
+## fetch.ai_digital_auto Setup
+
+clone the repo first:
+```
+git clone https://github.com/Elrabu/fetch.ai_digital_auto.git
+```
+
 
 ### 1. Create & Activate Virtual Environment
 ```
