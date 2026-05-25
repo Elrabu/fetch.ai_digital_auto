@@ -63,7 +63,7 @@ async def _run_on_main(coro):
 # ── Bridge agent ──────────────────────────────────────────────────────────────
 bridge_agent = Agent(
     name="smartwiper_bridge",
-    seed="smartwiper_bridge_seed_v2",
+    seed="YOUR_CUSTOM_SEED_PHRASE_HERE",
     mailbox=True,
     network="testnet",
 )
