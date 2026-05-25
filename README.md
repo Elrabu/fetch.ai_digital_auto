@@ -69,6 +69,9 @@ velocitas exec runtime-local up
 ### 3. create a new secret for the ASI:One API key
 
 1. Go to **Agent Secrets** in the bottom left corner under the **Build** Tab
+
+ <img width="1371" height="279" alt="image" src="https://github.com/user-attachments/assets/95be7574-8aaa-4647-8255-01e6be1e3a3a" />
+
 2. click **New Secret** and enter the ASI:one API key with the name ```ASI1_API_KEY```
 3. the secret is automatically used by the agentverse agent
 
