@@ -31,7 +31,6 @@ class SmartWiperApp(VehicleApp):
         self.Vehicle = vehicle_client
 
     async def set_wiper_mode(self, mode: str):
-        """Actuate the wiper — called from bridge via main loop."""
         await self.Vehicle.Body.Windshield.Front.Wiping.Mode.set(mode)
         logger.info(f"[Velocitas] Wiper set to {mode}")
 
