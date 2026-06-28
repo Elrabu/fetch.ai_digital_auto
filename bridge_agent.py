@@ -22,7 +22,6 @@ logging.getLogger("uagents.registration").setLevel(logging.ERROR)
 verdict_done = threading.Event()
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-AGENTVERSE_API_KEY = os.getenv("AGENTVERSE_API_KEY")
 SAFETY_AGENT_ADDRESS = "YOUR_AGENTVERSE_AGENT_ADDRESS"
 
 # ── Shared state ──────────────────────────────────────────────────────────────
