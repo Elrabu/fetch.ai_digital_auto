@@ -250,30 +250,12 @@ SAFETY_AGENT_ADDRESS = "agent1q..."
 ### 5. start the agent
 Click the **Start** button in the top right of the editor
 
-### 6. get an Agentverse API Key
-
-you will need this API key for the local ```bridge:_agent.py``` file in the downloaded code
-
-1. click your profile icon (e-mail address on bottom left)
-2. select API Keys
-3. click + New API Key
-4. give these permissions:
-
-<img width="1331" height="873" alt="image" src="https://github.com/user-attachments/assets/038fb105-b0b1-414c-9444-6b871339eb14" />
-
-6. name it smartwiper-bridge
-7. the API key should look like this:
-
-
-8. save API key so that you can access it later (e.g. in a txt file)
-
 ## fetch.ai_digital_auto Setup
 
 clone the repo first:
 ```
 git clone https://github.com/Elrabu/fetch.ai_digital_auto.git
 ```
-
 
 ### 1. Create & Activate Virtual Environment
 ```
