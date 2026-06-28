@@ -1,10 +1,8 @@
-# velocitas_runner.py
 import sys
 import logging
 import threading
 from bridge_agent import verdict_done
 
-# ── 1. Import bridge FIRST so it claims its own event loop ───────────────────
 from bridge_agent import (
     run_bridge_thread,
     set_velocitas_app,
@@ -12,31 +10,28 @@ from bridge_agent import (
     submit_state_for_evaluation,
 )
 
-# ── 2. Restore a fresh main loop for Velocitas / gRPC ────────────────────────
 import asyncio
-_main_loop = asyncio.new_event_loop()
-asyncio.set_event_loop(_main_loop)
+_main_loop = asyncio.new_event_loop() #setup main event loop for handling Velocitas
+asyncio.set_event_loop(_main_loop) #make this event loop the current loop so the Velocitas SDK can register on it
 
 from velocitas_sdk.vehicle_app import VehicleApp
-from vehicle import Vehicle, vehicle
+from vehicle import Vehicle, vehicle #import the local vehicle instance (running in SmartWiperApp)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger("Runner")
 
-# ── Velocitas App ─────────────────────────────────────────────────────────────
-class SmartWiperApp(VehicleApp):
+class SmartWiperApp(VehicleApp): #Velocitas SmartWiper App to implement the wiper safety logic
 
-    def __init__(self, vehicle_client: Vehicle):
+    def __init__(self, vehicle_client: Vehicle): #constructor that receives the vehicle model client
         super().__init__()
         self.Vehicle = vehicle_client
 
-    async def set_wiper_mode(self, mode: str):
+    async def set_wiper_mode(self, mode: str): #method to set the wiper mode in the Velocitas App
         await self.Vehicle.Body.Windshield.Front.Wiping.Mode.set(mode)
         logger.info(f"[Velocitas] Wiper set to {mode}")
 
-    async def on_start(self):
-
-        async def on_hood_changed(reply):
+    async def on_start(self): #called on startup
+        async def on_hood_changed(reply): #callback when the IsOpen signal changes (current state of vehicle model)
             hood_dp   = reply.get(self.Vehicle.Body.Hood.IsOpen)
             hood_open = bool(hood_dp.value)
 
@@ -45,44 +40,39 @@ class SmartWiperApp(VehicleApp):
             mode  = str(mode_reply.value) if mode_reply.value else "OFF"
             speed = float(speed_reply.value or 0.0)
 
-            state = {
+            state = { #get current vehicle state from the method and save it into the dictionary
                 "hood_is_open":       hood_open,
                 "current_wiper_mode": mode,
                 "vehicle_speed":      speed,
             }
             logger.info(f"[Velocitas] Hood event → {state}")
-            submit_state_for_evaluation(state)
+            submit_state_for_evaluation(state) #call the function from "bridge_agent.py" with the current state
 
-        await self.Vehicle.Body.Hood.IsOpen.subscribe(on_hood_changed)
+        await self.Vehicle.Body.Hood.IsOpen.subscribe(on_hood_changed) #when the vehicle signal IsOpen changed (e.g. on startup) then call "on_hood_changed"
         logger.info("[Velocitas] Hood listener registered.")
 
-# ── Main ──────────────────────────────────────────────────────────────────────
-async def main():
-    # Register main loop with bridge (for cross-loop SDK calls)
-    set_main_loop(_main_loop)
+async def main(): 
+    set_main_loop(_main_loop) #create reference to this main loop for the bridge thread (bridge_agent.py)
 
-    # Create and register Velocitas app
-    app = SmartWiperApp(vehicle)
+    app = SmartWiperApp(vehicle) 
     set_velocitas_app(app)
 
-    # Start bridge daemon thread (runs on its own loop)
-    bridge_thread = threading.Thread(
+    bridge_thread = threading.Thread( #create the bridge thread that runs the bridge agent
         target=run_bridge_thread, daemon=True, name="bridge"
     )
-    bridge_thread.start()
+    bridge_thread.start() #starts the bridge thread
+    verdict_done.clear() #clears the verdict_done flag
 
-    verdict_done.clear()
-
-    await asyncio.gather(
-        app.run(),
-        _wait_for_verdict(),
+    await asyncio.gather( #runs both coroutines on the main loop:
+        app.run(), #Velocitas application coroutine
+        _wait_for_verdict(), #wait_for_verdict coroutine
     )
 
-async def _wait_for_verdict():
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, verdict_done.wait)  # blocks executor, not event loop
-    print("[runner] Verdict received — exiting.")
+async def _wait_for_verdict(): #defines the wait_for_verdict coroutine
+    loop = asyncio.get_event_loop() #gets the main loop (from velocitas_runner.py)
+    await loop.run_in_executor(None, verdict_done.wait) #suspends but not blocks the wait_for_verdict coroutine
+    print("[runner] Verdict received — exiting."), 
     sys.exit(0)
 
 if __name__ == "__main__":
-    _main_loop.run_until_complete(main())
+    _main_loop.run_until_complete(main()) #keep the main loop (velocitas) running until completion
