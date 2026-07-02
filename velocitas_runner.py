@@ -16,6 +16,9 @@ asyncio.set_event_loop(_main_loop) #make this event loop the current loop so the
 
 from velocitas_sdk.vehicle_app import VehicleApp
 from vehicle import Vehicle, vehicle #import the local vehicle instance (running in SmartWiperApp)
+from timing import timer
+from memory_tracker import memory
+memory.start_peak_sampler()
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger("Runner")
@@ -46,12 +49,14 @@ class SmartWiperApp(VehicleApp): #Velocitas SmartWiper App to implement the wipe
                 "vehicle_speed":      speed,
             }
             logger.info(f"[Velocitas] Hood event → {state}")
+
             submit_state_for_evaluation(state) #call the function from "bridge_agent.py" with the current state
 
         await self.Vehicle.Body.Hood.IsOpen.subscribe(on_hood_changed) #when the vehicle signal IsOpen changed (e.g. on startup) then call "on_hood_changed"
         logger.info("[Velocitas] Hood listener registered.")
 
 async def main(): 
+
     set_main_loop(_main_loop) #create reference to this main loop for the bridge thread (bridge_agent.py)
 
     app = SmartWiperApp(vehicle) 
@@ -72,6 +77,10 @@ async def _wait_for_verdict(): #defines the wait_for_verdict coroutine
     loop = asyncio.get_event_loop() #gets the main loop (from velocitas_runner.py)
     await loop.run_in_executor(None, verdict_done.wait) #suspends but not blocks the wait_for_verdict coroutine
     print("[runner] Verdict received — exiting."), 
+
+    timer.print_summary()
+    memory.print_summary()
+
     sys.exit(0)
 
 if __name__ == "__main__":
