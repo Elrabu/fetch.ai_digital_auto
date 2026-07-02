@@ -1,8 +1,6 @@
 import time
 import logging
 
-logger = logging.getLogger("Timing")
-
 class PerformanceTimer:
     def __init__(self):
         self._program_start: float = time.perf_counter()  # t=0 Referenzpunkt
