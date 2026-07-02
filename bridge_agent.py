@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 from typing import Optional
 
+
 load_dotenv()
 
 _bridge_loop = asyncio.new_event_loop()  # create new event Loop for bridge agent
@@ -13,13 +14,15 @@ asyncio.set_event_loop(_bridge_loop) #set the bridge loop as the event loop so e
 
 from uagents import Agent, Context, Model
 from uagents.setup import fund_agent_if_low
+from timing import timer
+from memory_tracker import memory
 
 logger = logging.getLogger("Bridge") #set up logging
 logging.getLogger("uagents.registration").setLevel(logging.ERROR)
 
 verdict_done = threading.Event() #creates a new boolean flag that can be set in the code
 
-SAFETY_AGENT_ADDRESS = "agent1q25d7k7xddjh45xk5uqx0l3c9pav3m2l7zwc77fncfy52fsks0ya22z7g3h" #set Agentverse agent address
+SAFETY_AGENT_ADDRESS = "YOUR_AGENT_ADDRESS" #set Agentverse agent address
 
 _event_queue: queue.Queue = queue.Queue() #create Queue to receive Velocitas dictionaries (current vehicle sensor state)
 _velocitas_app = None #reference to velocitas will be set here at runtime
@@ -61,7 +64,10 @@ bridge_agent = Agent( #set up the bridge uAgent
 fund_agent_if_low(bridge_agent.wallet.address())
 
 @bridge_agent.on_message(model=SafetyResponseMsg) #triggers when a message of type "SafetyResponseMsg" arrives
-async def on_safety_response(ctx: Context, sender: str, msg: SafetyResponseMsg): # method to trigger the corresponding Vehicle App action
+async def on_safety_response(ctx: Context, sender: str, msg: SafetyResponseMsg): # function to trigger the corresponding Vehicle App action
+
+    timer.mark_verdict_received()
+
     logger.info(f"[Bridge] <- Safety response: {msg.risk_level} / {msg.recommended_action}")
     print(f"  verdict={msg.risk_level}  action={msg.recommended_action}")
 
@@ -71,6 +77,7 @@ async def on_safety_response(ctx: Context, sender: str, msg: SafetyResponseMsg):
         await _run_on_main(_velocitas_app.set_wiper_mode("SLOW"))
     else:
         logger.info("[Bridge] No wiper change needed.")
+
     verdict_done.set() #set the verdict_done flag
 
 _agent_ctx: Optional[Context] = None #placeholder to hold agent context on startup
@@ -79,6 +86,9 @@ _agent_ctx: Optional[Context] = None #placeholder to hold agent context on start
 async def on_startup(ctx: Context): #startup the agent receiving the agent context
     global _agent_ctx
     _agent_ctx = ctx
+
+    timer.mark_startup_complete()
+
     ctx.logger.info("[Bridge] Startup: launching event consumer.")
     asyncio.ensure_future(_event_consumer()) #schedules the "event_consumer" coroutine as a background task on the current event loop
 
@@ -100,6 +110,7 @@ async def _event_consumer(): #coroutine that drains the queue (vehicle state) an
         )
 
         logger.info(f"[Bridge] -> Agentverse safety agent")
+
         await _agent_ctx.send(SAFETY_AGENT_ADDRESS, msg) #send the message to the safety agent in the agentverse
 
 def run_bridge_thread(): #thread entry point that runs the bridge agent on its own event loop
