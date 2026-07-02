@@ -1,4 +1,3 @@
-# timing.py
 import time
 import logging
 
