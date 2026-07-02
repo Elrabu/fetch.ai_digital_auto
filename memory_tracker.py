@@ -4,8 +4,6 @@ import time
 import threading
 import psutil
 
-logger = logging.getLogger("Memory")
-
 class MemoryTracker:
     def __init__(self):
         self._process = psutil.Process(os.getpid())
