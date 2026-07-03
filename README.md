@@ -328,7 +328,7 @@ setValue Vehicle.Body.Windshield.Front.Wiping.Mode "MEDIUM"
 setValue Vehicle.Body.Hood.IsOpen true
 ```
 
-## setup benchmarking
+## Setup benchmarking
 
 to use the benchmarking, psutil needs to be installed
 ```
