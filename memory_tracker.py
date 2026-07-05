@@ -25,7 +25,6 @@ class MemoryTracker:
         threading.Thread(target=_sample, daemon=True, name="memory-sampler").start() #start new thread and mae sure that it is stopped on program end
 
     def print_summary(self): #print the peak memory usage value
-        """Gibt nur den Peak-Speicher aus."""
         self._update_peak()
         print("################################################################")
         print(f"Peak Memory (RSS): {self._peak_mb:>10.2f} MB")
