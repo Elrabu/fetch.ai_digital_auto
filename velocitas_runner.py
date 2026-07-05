@@ -70,7 +70,7 @@ async def main():
 
     await asyncio.gather( #runs both coroutines on the main loop:
         velocitas_vehicle_app.run(), #Velocitas application coroutine
-        wait_for_LLM_verdict(), #wait_for_verdict coroutine
+        wait_for_LLM_verdict(), #wait_for_LLM_verdict coroutine
     )
 
 async def wait_for_LLM_verdict(): #defines the wait_for_verdict coroutine
