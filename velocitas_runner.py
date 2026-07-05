@@ -73,9 +73,9 @@ async def main():
         wait_for_LLM_verdict(), #wait_for_LLM_verdict coroutine
     )
 
-async def wait_for_LLM_verdict(): #defines the wait_for_verdict coroutine
+async def wait_for_LLM_verdict(): #defines the wait_for_LLM_verdict coroutine
     velocitas_loop = asyncio.get_event_loop() #gets the main loop (from velocitas_runner.py)
-    await velocitas_loop.run_in_executor(None, verdict_done_flag.wait) #suspends but not blocks the wait_for_verdict coroutine
+    await velocitas_loop.run_in_executor(None, verdict_done_flag.wait) #suspends but not blocks the wait_for_LLM_verdict coroutine
     print("[runner] Verdict received - exiting."), 
 
     timer.print_summary()
