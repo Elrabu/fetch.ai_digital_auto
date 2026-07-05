@@ -93,8 +93,7 @@ import re
 import httpx
 from uagents import Context, Model
 
-
-# ── Message Models (UNCHANGED — must match bridge_agent.py) ──────────────────
+# ── Message Models ────────────────────────────────────────────────────────────
 class WiperStateMsg(Model):
     hood_is_open:       bool
     current_wiper_mode: str
@@ -104,7 +103,6 @@ class SafetyResponseMsg(Model):
     risk_level:         str
     assessment:         str
     recommended_action: str
-
 
 # ── ASI:One config ───────────────────────────────────────────────────────────
 ASI1_URL   = "https://api.asi1.ai/v1/chat/completions"
@@ -131,7 +129,7 @@ _JSON_RE     = re.compile(r"\{.*\}", re.DOTALL)
 
 
 # ── ASI:One call ─────────────────────────────────────────────────────────────
-async def _llm_reason(msg: WiperStateMsg, ctx: Context) -> dict:
+async def reason_with_LLM(msg: WiperStateMsg, ctx: Context) -> dict:
     if not ASI1_KEY:
         raise RuntimeError("ASI1_API_KEY secret is not set on Agentverse.")
 
@@ -168,8 +166,7 @@ async def _llm_reason(msg: WiperStateMsg, ctx: Context) -> dict:
 
 
 # ── Hard safety policy (overrides LLM) ───────────────────────────────────────
-def _apply_safety_policy(msg: WiperStateMsg, llm: dict) -> SafetyResponseMsg:
-    # Rule 1: hood open + wipers active => unconditional stop
+def fallback_safety_if_LLM_fails(msg: WiperStateMsg, llm: dict) -> SafetyResponseMsg:
     if msg.hood_is_open and msg.current_wiper_mode.upper() != "OFF":
         return SafetyResponseMsg(
             risk_level="HIGH",
@@ -197,17 +194,11 @@ def _apply_safety_policy(msg: WiperStateMsg, llm: dict) -> SafetyResponseMsg:
         recommended_action=action,
     )
 
-
 # ── Startup ──────────────────────────────────────────────────────────────────
 @agent.on_event("startup")
 async def on_start(ctx: Context):
     ctx.logger.info(f"Safety Agent (ASI:One-backed) started: {ctx.address}")
-    if not ASI1_KEY:
-        ctx.logger.warning(
-            "ASI1_API_KEY secret is missing — every request will fail safe."
-        )
     ctx.logger.info("Ready to receive WiperStateMsg messages.")
-
 
 # ── Message Handler ──────────────────────────────────────────────────────────
 @agent.on_message(model=WiperStateMsg)
@@ -218,7 +209,7 @@ async def handle_wiper_state(ctx: Context, sender: str, msg: WiperStateMsg):
     )
 
     try:
-        llm_verdict = await _llm_reason(msg, ctx)
+        llm_verdict = await reason_with_LLM(msg, ctx)
         ctx.logger.info(f"[asi1] proposed: {llm_verdict}")
     except Exception as e:
         ctx.logger.exception(f"LLM call failed; failing safe: {e}")
@@ -229,11 +220,12 @@ async def handle_wiper_state(ctx: Context, sender: str, msg: WiperStateMsg):
         ))
         return
 
-    final = _apply_safety_policy(msg, llm_verdict)
+    final = fallback_safety_if_LLM_fails(msg, llm_verdict)
     ctx.logger.info(
         f"Final verdict → {final.risk_level} / {final.recommended_action}"
     )
     await ctx.send(sender, final)
+
 
 ```
 ### 4. copy the Agent Address
