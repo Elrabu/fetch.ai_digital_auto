@@ -22,7 +22,7 @@ class MemoryTracker:
             while True:
                 self._update_peak() #measure peak through the corresponding function
                 time.sleep(interval_s)
-        threading.Thread(target=_sample, daemon=True, name="mem-sampler").start() #start new thread and mae sure that it is stopped on program end
+        threading.Thread(target=_sample, daemon=True, name="memory-sampler").start() #start new thread and mae sure that it is stopped on program end
 
     def print_summary(self): #print the peak memory usage value
         """Gibt nur den Peak-Speicher aus."""
