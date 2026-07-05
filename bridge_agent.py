@@ -2,11 +2,7 @@ import asyncio
 import logging
 import queue
 import threading
-import os
-from dotenv import load_dotenv
 from typing import Optional
-
-load_dotenv()
 
 bridge_agent_event_loop = asyncio.new_event_loop()  # create new event Loop for bridge agent (part of a Scheduler architecture, single Thread with coroutines)
 asyncio.set_event_loop(bridge_agent_event_loop) #set the bridge loop as the event loop so every new uagent registers on this loop
@@ -77,19 +73,19 @@ async def on_safety_response(ctx: Context, sender: str, msg: SafetyResponseMsg):
     else:
         logger.info("[Bridge] No wiper change needed.")
 
-    verdict_done_flag.set() #set the verdict_done flag
+    verdict_done_flag.set() #set the flag verdict_done_flag
 
 agent_context: Optional[Context] = None #placeholder to hold agent context on startup
 
 @bridge_agent.on_event("startup") #on startup, provides the agent with the Fetch.ai context, so that it doesnt need global references
-async def on_startup(ctx: Context): #startup the agent receiving the agent context
+async def on_startup(ctx: Context): #on startup the agent receives the agent context
     global agent_context
     agent_context = ctx
 
     timer.mark_startup_complete()
 
     ctx.logger.info("[Bridge] Startup: launching event consumer.")
-    asyncio.ensure_future(vehicle_queue_consumer()) #schedules the "event_consumer" coroutine as a background task on the current event loop
+    asyncio.ensure_future(vehicle_queue_consumer()) #schedules the "vehicle_queue_consumer" coroutine as a background task on the current event loop
 
 async def vehicle_queue_consumer(): #coroutine that drains the queue (vehicle state) and forwards it
     logger.info("[Bridge] Event forwarder online — target=%s", SAFETY_AGENT_ADDRESS[:16] + "…")
@@ -110,7 +106,7 @@ async def vehicle_queue_consumer(): #coroutine that drains the queue (vehicle st
 
         logger.info(f"[Bridge] -> Agentverse safety agent")
 
-        await agent_context.send(SAFETY_AGENT_ADDRESS, msg) #send the message to the safety agent in the agentverse
+        await agent_context.send(SAFETY_AGENT_ADDRESS, msg) #sends the message to the safety agent in the agentverse
 
 def run_bridge_thread(): #thread entry point that runs the bridge agent on its own event loop
     bridge_agent_event_loop.run_until_complete(bridge_agent.run_async()) #own bridge event loop to run alongside the Velocitas thread
