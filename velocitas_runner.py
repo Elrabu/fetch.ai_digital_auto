@@ -66,7 +66,7 @@ async def main():
         target=run_bridge_thread, daemon=True, name="bridge"
     )
     bridge_agent_thread.start() #starts the bridge thread
-    verdict_done_flag.clear() #clears the verdict_done flag
+    verdict_done_flag.clear() #clears the flag verdict_done_flag
 
     await asyncio.gather( #runs both coroutines on the main loop:
         velocitas_vehicle_app.run(), #Velocitas application coroutine
