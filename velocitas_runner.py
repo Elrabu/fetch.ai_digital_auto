@@ -48,7 +48,7 @@ class SmartWiperApp(VehicleApp): #Velocitas SmartWiper App to implement the wipe
                 "current_wiper_mode": wiping_mode,
                 "vehicle_speed":      current_speed,
             }
-            logger.info(f"[Velocitas] Hood event → {state}")
+            logger.info(f"[Velocitas] Hood event: {state}")
 
             submit_state_for_evaluation(state) #call the function from "bridge_agent.py" with the current state
 
